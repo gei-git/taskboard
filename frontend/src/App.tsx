@@ -1,7 +1,7 @@
 import React from 'react';
 import './index.css';
 
-function App() {
+const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
       <div className="text-center">
@@ -17,6 +17,6 @@ function App() {
       </div>
     </div>
   );
-}
+};
 
 export default App;
