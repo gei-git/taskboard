@@ -44,7 +44,11 @@ func main() {
 		})
 	})
 
-	r.POST("/register", AuthHandler.Register)
+	auth := r.Group("/auth")
+	{
+		auth.POST("/register", AuthHandler.Register)
+		auth.POST("/login", AuthHandler.Login)
+	}
 
 	log.Printf("🚀 TaskBoard Backend started on http://localhost:%s", cfg.Server.Port)
 	r.Run(":" + cfg.Server.Port)
