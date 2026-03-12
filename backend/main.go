@@ -6,6 +6,7 @@ import (
 	"github.com/gei-git/taskboard/internal/config"
 	"github.com/gei-git/taskboard/internal/handler"
 	"github.com/gei-git/taskboard/internal/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -37,6 +38,16 @@ func main() {
 	AuthHandler := handler.NewAuthHandler(db)
 
 	r := gin.Default()
+
+	// ====================== CORS 配置（关键修复）=====================
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // 前端地址
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * 3600, // 12 小时缓存预检结果
+	}))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
