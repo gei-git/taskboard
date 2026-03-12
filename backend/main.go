@@ -5,6 +5,7 @@ import (
 
 	"github.com/gei-git/taskboard/internal/config"
 	"github.com/gei-git/taskboard/internal/handler"
+	"github.com/gei-git/taskboard/internal/middleware"
 	"github.com/gei-git/taskboard/internal/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,19 @@ func main() {
 	{
 		auth.POST("/register", AuthHandler.Register)
 		auth.POST("/login", AuthHandler.Login)
+	}
+
+	// 受保护的仪表盘路由
+	// === 受保护的仪表盘路由 ===
+	dashboard := r.Group("/dashboard")
+	dashboard.Use(middleware.JWTAuth()) // ← 使用修复后的中间件
+	{
+		dashboard.GET("/profile", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "欢迎来到仪表盘！这是受保护的接口",
+				"status":  "authenticated",
+			})
+		})
 	}
 
 	log.Printf("🚀 TaskBoard Backend started on http://localhost:%s", cfg.Server.Port)
