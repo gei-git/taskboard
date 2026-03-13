@@ -75,6 +75,9 @@ func main() {
 		})
 	}
 
+	// WebSocket 实时通信路由
+	r.GET("/ws", handler.HandleWebSocket)
+
 	log.Printf("🚀 TaskBoard Backend started on http://localhost:%s", cfg.Server.Port)
 	r.Run(":" + cfg.Server.Port)
 }
