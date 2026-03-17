@@ -8,13 +8,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// upgrader：WebSocket 升级器（把普通 HTTP 请求升级成 WebSocket 长连接）
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true }, // 允许前端连接
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-// clients：全局 map，用来保存当前所有在线的 WebSocket 连接。
-var clients = make(map[*websocket.Conn]bool) // 所有在线客户端
+var clients = make(map[*websocket.Conn]bool)
 
 func HandleWebSocket(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -24,7 +22,7 @@ func HandleWebSocket(c *gin.Context) {
 	}
 
 	clients[conn] = true
-	log.Println("新客户端连接成功")
+	log.Println("✅ 新客户端连接成功")
 
 	defer func() {
 		delete(clients, conn)
@@ -32,13 +30,18 @@ func HandleWebSocket(c *gin.Context) {
 	}()
 
 	for {
+		// 读取前端发来的消息
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		// 广播给所有客户端（实时同步任务变化）
+
+		// 关键修复：广播给**所有其他客户端**（包括自己）
 		for client := range clients {
-			client.WriteMessage(websocket.TextMessage, msg)
+			if err := client.WriteMessage(websocket.TextMessage, msg); err != nil {
+				client.Close()
+				delete(clients, client)
+			}
 		}
 	}
 }
