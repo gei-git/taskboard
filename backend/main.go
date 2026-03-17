@@ -29,7 +29,7 @@ func main() {
 		log.Fatalf("数据库连接失败: %v", err)
 	}
 
-	err = db.AutoMigrate(&models.User{})
+	err = db.AutoMigrate(&models.User{}, &models.Task{})
 	if err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
@@ -37,6 +37,7 @@ func main() {
 	log.Println("✅ Database connected and migrated successfully!")
 
 	AuthHandler := handler.NewAuthHandler(db)
+	taskHandler := handler.NewTaskHandler(db)
 
 	r := gin.Default()
 
@@ -75,8 +76,10 @@ func main() {
 		})
 	}
 
-	// WebSocket 实时通信路由
-	r.GET("/ws", handler.HandleWebSocket)
+	// WebSocket 路由（实时同步 + 数据库持久化）
+	r.GET("/ws", func(c *gin.Context) {
+		handler.HandleWebSocketWithDB(c, taskHandler)
+	})
 
 	log.Printf("🚀 TaskBoard Backend started on http://localhost:%s", cfg.Server.Port)
 	r.Run(":" + cfg.Server.Port)

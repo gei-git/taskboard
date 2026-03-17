@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
+	"github.com/gei-git/taskboard/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -14,7 +16,7 @@ var upgrader = websocket.Upgrader{
 
 var clients = make(map[*websocket.Conn]bool)
 
-func HandleWebSocket(c *gin.Context) {
+func HandleWebSocketWithDB(c *gin.Context, taskHandler *TaskHandler) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("WebSocket 升级失败:", err)
@@ -30,18 +32,21 @@ func HandleWebSocket(c *gin.Context) {
 	}()
 
 	for {
-		// 读取前端发来的消息
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		// 关键修复：广播给**所有其他客户端**（包括自己）
+		// 解析任务列表并保存到数据库
+		var tasks []models.Task
+		json.Unmarshal(msg, &tasks)
+		for _, t := range tasks {
+			taskHandler.SaveTask(t)
+		}
+
+		// 广播给所有客户端
 		for client := range clients {
-			if err := client.WriteMessage(websocket.TextMessage, msg); err != nil {
-				client.Close()
-				delete(clients, client)
-			}
+			client.WriteMessage(websocket.TextMessage, msg)
 		}
 	}
 }
