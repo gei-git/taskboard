@@ -15,3 +15,15 @@ cd backend && go run main.go
 
 # 前端
 cd frontend && npm start
+
+# 接口测试
+注册接口url: http://127.0.0.1:8080/auth/register
+- 使用json数据
+{"username":"testuser","email":"test@example.com","password":"123456"}
+
+登录接口URL：http://127.0.0.1:8080/auth/login
+- 使用json数据
+{"email":"test@example.com","password":"123456"}
+需要在请求头中加入Authorization：Bearer {token}
+![alt text](image.png)
+剩下接口在main.go
