@@ -51,6 +51,16 @@ func main() {
 		MaxAge:           12 * 3600, // 12 小时缓存预检结果
 	}))
 
+	// 任务路由（受 JWT 保护）
+	task := r.Group("/tasks")
+	task.Use(middleware.JWTAuth()) // ← 需登录才能操作任务
+	{
+		task.GET("", taskHandler.GetAllTasks)
+		task.POST("", taskHandler.CreateTask)
+		task.PUT("/:id", taskHandler.UpdateTask)
+		task.DELETE("/:id", taskHandler.DeleteTask)
+	}
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
